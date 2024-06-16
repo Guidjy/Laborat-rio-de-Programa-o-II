@@ -6,8 +6,10 @@
 #include <ctype.h>
 #include "tecla.h"
 #include "tela.h"
+#include "lista.h"
 #include "abb.h"
 #include "jogo_arv.h"
+#include "jogo_desenho.h"
 
 
 struct _word
@@ -24,6 +26,8 @@ int main()
     srand(time(0));
     // inicia o processamento de entrada de letras individuais
     tecla_ini();
+    // inicia a tela especial
+    tela_ini();
 
     // lista de sílabas para gerar palavras
     char silabas[104][5];
@@ -42,8 +46,8 @@ int main()
     int resultado;
 
     // limites mínimo e máximo de tempo (em segundos) até a inserção de uma palavra na árvore
-    double tempo_min = 4.0;
-    double tempo_max = 8.0;
+    double tempo_min = 3.5;
+    double tempo_max = 7.0;
 
     // guarda o instante em que o jogo começou
     double tempo_inicio_jogo = tela_relogio();
@@ -79,7 +83,7 @@ int main()
                 if (foi_removido)
                 {
                     // aumenta a pontuação
-                    pontuacao += 10;
+                    pontuacao += strlen(entrada);
                 }
                 // limpa a entrada
                 while(strlen(entrada) > 0)
@@ -123,21 +127,21 @@ int main()
             diminui_limites_de_tempo(tempo_duracao_jogo, &tempo_max, &tempo_min);
 
             // 5) desenha a árvore
-            printf("\n\n");
-            arv_imprime(arvore_de_palavras, 0);
-            printf("\n\n");
-            printf("palavra sorteada: %s \n", sorteada->palavra);
-            printf("tempo até inserção: %.2lf\n", tempo_ate_insercao);
-            printf("duração: %.2lf\n", tempo_duracao_jogo);
-            printf("min: %.2lf\nmax: %.2lf\n", tempo_min, tempo_max);
-            printf("resultado: %d\n", resultado);
-            printf("entrada: %s\n", entrada);
+            tela_limpa();
+            int largura = calculo_dimensional(arvore_de_palavras);
+            desenha_arvore(arvore_de_palavras, largura);
+            desenha_duracao(tempo_duracao_jogo);
+            desenha_palavra_a_inserir(sorteada->palavra, tempo_ate_insercao / sorteada->tempo);
+            desenha_borda(entrada, pontuacao);
+            tela_atualiza();
         }
         while (!game_over(arvore_de_palavras, resultado));
-
-        printf("GAME OVER!\n");
+        
+        tela_limpa();
         // se uma partida encerrar, pergunta se o jogador quer continuar jogando
+        tela_lincol(12, 40);
         printf("Quer jogar denovo[s/n]? \n");
+        tela_atualiza();
         char resposta;
         do 
         {
@@ -149,12 +153,18 @@ int main()
            break;
         }
     }
+    tela_limpa();
 
-    // encerra o processamento de letras individuais
-    tecla_fim();
+    tela_fim();
+    tela_atualiza();
 
     // TODO tela de final
     printf("Pontuação: %d\n", pontuacao);
+
+    // atualiza o arquivo dos maiores recordistas
+    atualiza_top5(pontuacao);
     
+    tecla_fim();
+
     return 0;
 }

@@ -23,8 +23,10 @@ Palavra gera_palavra_aleatoria(char silabas[104][5], double t_min, double t_max)
 // diminui os limites de tempo de inserção de palavras
 void diminui_limites_de_tempo(double duracao, double *t_max, double *t_min);
 
-// retorna a dimensão (espaço) horizontal necessária para o desenho da árvore iniciada nesse nó
-int calculo_dimensional(arv a, int nivel, int *pos_x);
+// atualiza o arquivo de maiores recordistas
+void atualiza_top5(int pontuacao);
 
+// retorna o número de caracteres necessários para imprimir uma árvore
+int calculo_dimensional(arv self);
 
 #endif

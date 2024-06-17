@@ -135,7 +135,10 @@ void desenha_arvore(arv self, int largura)
 void desenha_duracao(double tempo)
 {
     tela_lincol(2, LARGURA_MAX - 20);
-    printf("| duração: %.2lf ", tempo);
+    printf("| duração: ");
+    tela_cor_letra(0, 255, 255);
+    printf("%.2lf", tempo);
+    tela_cor_normal();
 }
 
 
@@ -204,7 +207,28 @@ void desenha_borda(char *entrada, int pontuacao)
 
     // mostra a entrada do jogador
     tela_lincol(tela_nlin() + 6, 0);
-    printf(">Entrada: %s", entrada);
+    printf(">Entrada: ");
+    tela_cor_letra(0, 255, 255);
+    printf("%s", entrada);
+    tela_cor_normal();
     tela_lincol(tela_nlin() + 7, 0);
-    printf(">Pontos:  %d", pontuacao);
+    printf(">Pontos:  ");
+    tela_cor_letra(0, 255, 255);
+    printf("%d", pontuacao);
+    tela_cor_normal();
+}
+
+
+void desenha_fim_de_jogo(int pontuacao, double duracao)
+{
+    tela_lincol(11, 50);
+    tela_cor_letra(255, 51, 51);
+    printf("GAME OVER!");
+    tela_cor_normal();
+    tela_lincol(13, 44);
+    printf(">Pontuação:       %d", pontuacao);
+    tela_lincol(14, 44);
+    printf(">Tempo de jogo:   %.2lf", duracao);
+    tela_lincol(16, 44);
+    printf("Quer jogar denovo[s/n]? \n");
 }

@@ -139,9 +139,10 @@ int main()
 
             // 5) desenha a árvore e a tela
             tela_limpa();
+
             int largura = calculo_dimensional(arvore_de_palavras);
             desenha_arvore(arvore_de_palavras, largura);
-
+            
             desenha_duracao(tempo_duracao_jogo);
             desenha_palavra_a_inserir(sorteada->palavra, tempo_ate_insercao / sorteada->tempo);
             desenha_borda(entrada, pontuacao);

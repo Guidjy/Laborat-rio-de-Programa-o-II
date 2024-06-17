@@ -98,17 +98,6 @@ int main()
             {
                 // sorteia palavra
                 sorteada = gera_palavra_aleatoria(silabas, tempo_min, tempo_max);
-                // verifica se a palavra sorteada é válida
-                // ess teste e correção tem que ser feitos 
-                // devido a um erro que acontece quando o jogador inicia outra rodada
-                for (int j = 0; j < strlen(sorteada->palavra); j++)
-                {
-                    if (!isalpha(sorteada->palavra[j]))
-                    {
-                        sorteada = gera_palavra_aleatoria(silabas, tempo_min, tempo_max);
-                        break;
-                    }
-                }
                 // guarda o instante em que a palavra foi sorteada
                 tempo_sorteacao_palavra = tempo_duracao_jogo;
                 // guarda o tempo até a inserção da palavra
@@ -142,7 +131,7 @@ int main()
 
             int largura = calculo_dimensional(arvore_de_palavras);
             desenha_arvore(arvore_de_palavras, largura);
-            
+
             desenha_duracao(tempo_duracao_jogo);
             desenha_palavra_a_inserir(sorteada->palavra, tempo_ate_insercao / sorteada->tempo);
             desenha_borda(entrada, pontuacao);
@@ -155,39 +144,44 @@ int main()
         // se uma partida encerrar, pergunta se o jogador quer continuar jogando
         desenha_fim_de_jogo(pontuacao, tempo_duracao_jogo);
         tela_atualiza();
+        // recebe a resposta do jogador
         char resposta;
         do 
         {
             resposta = tolower(tecla_le_char());
         }
         while (resposta != 's' && resposta != 'n');
+        // se não quiser jogar denovo, quebra o laço
         if (resposta == 'n') 
         {
            break;
         }
+        // se quiser jogar denovo
         if (resposta == 's')
         {
-            // reinicia o jogo
+            // reinicia as variáveis do jogo
             tempo_min = 3.5;
             tempo_max = 7.0;
             tempo_inicio_jogo = tela_relogio();
-            tem_palavra_sorteada = false;
-            free(sorteada);
             pontuacao = 0;
             arv_libera(arvore_de_palavras);
             while(strlen(entrada) > 0)
             {
                 entrada[strlen(entrada) - 1] = '\0';
             }
+            // sorteiam-se duas palavras aqui para evitar o sorteamento de lixo ao reiniciar a partida
+            sorteada = gera_palavra_aleatoria(silabas, tempo_min, tempo_max);
+            sorteada = gera_palavra_aleatoria(silabas, tempo_min, tempo_max);
+            tem_palavra_sorteada = false;
         }
     }
 
     // atualiza o arquivo dos maiores recordistas
     tela_limpa();
-    
     atualiza_top5(pontuacao);
-    
+
     tecla_fim();
+    tela_fim();
 
     return 0;
 }

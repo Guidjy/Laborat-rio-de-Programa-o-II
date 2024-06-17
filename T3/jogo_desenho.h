@@ -11,3 +11,6 @@ void desenha_palavra_a_inserir(char *palavra, double tempo);
 
 // desenha a borda inferior da tela e a palavra sendo digitada pelo jogador
 void desenha_borda(char *entrada, int pontuacao);
+
+// desenha a tela de fim de jogo
+void desenha_fim_de_jogo(int pontuacao, double duracao);

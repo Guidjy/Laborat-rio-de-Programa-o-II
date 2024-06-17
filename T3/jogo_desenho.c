@@ -61,6 +61,10 @@ int calculo_dimensional(arv self)
     {
         return LARGURA_MAX - 21;
     }
+    else if (largura < 20)
+    {
+        return 20;
+    }
     return largura;
 }
 

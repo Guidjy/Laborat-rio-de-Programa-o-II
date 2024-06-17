@@ -1,3 +1,8 @@
+// Funções auxiliares do T3 de LabII
+
+#ifndef _JOGO_DESENHO_H
+#define _JOGO_DESENHO_H
+
 #include "abb.h"
 
 // desenha a árvore
@@ -14,3 +19,5 @@ void desenha_borda(char *entrada, int pontuacao);
 
 // desenha a tela de fim de jogo
 void desenha_fim_de_jogo(int pontuacao, double duracao);
+
+#endif

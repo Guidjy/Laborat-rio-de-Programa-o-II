@@ -98,6 +98,17 @@ int main()
             {
                 // sorteia palavra
                 sorteada = gera_palavra_aleatoria(silabas, tempo_min, tempo_max);
+                // verifica se a palavra sorteada é válida
+                // ess teste e correção tem que ser feitos 
+                // devido a um erro que acontece quando o jogador inicia outra rodada
+                for (int j = 0; j < strlen(sorteada->palavra); j++)
+                {
+                    if (!isalpha(sorteada->palavra[j]))
+                    {
+                        sorteada = gera_palavra_aleatoria(silabas, tempo_min, tempo_max);
+                        break;
+                    }
+                }
                 // guarda o instante em que a palavra foi sorteada
                 tempo_sorteacao_palavra = tempo_duracao_jogo;
                 // guarda o tempo até a inserção da palavra
@@ -126,21 +137,22 @@ int main()
             // diminui os limites de tempo de inserção de palavras
             diminui_limites_de_tempo(tempo_duracao_jogo, &tempo_max, &tempo_min);
 
-            // 5) desenha a árvore
+            // 5) desenha a árvore e a tela
             tela_limpa();
             int largura = calculo_dimensional(arvore_de_palavras);
             desenha_arvore(arvore_de_palavras, largura);
+
             desenha_duracao(tempo_duracao_jogo);
             desenha_palavra_a_inserir(sorteada->palavra, tempo_ate_insercao / sorteada->tempo);
             desenha_borda(entrada, pontuacao);
+
             tela_atualiza();
         }
         while (!game_over(arvore_de_palavras, resultado));
         
         tela_limpa();
         // se uma partida encerrar, pergunta se o jogador quer continuar jogando
-        tela_lincol(12, 40);
-        printf("Quer jogar denovo[s/n]? \n");
+        desenha_fim_de_jogo(pontuacao, tempo_duracao_jogo);
         tela_atualiza();
         char resposta;
         do 
@@ -152,16 +164,26 @@ int main()
         {
            break;
         }
+        if (resposta == 's')
+        {
+            // reinicia o jogo
+            tempo_min = 3.5;
+            tempo_max = 7.0;
+            tempo_inicio_jogo = tela_relogio();
+            tem_palavra_sorteada = false;
+            free(sorteada);
+            pontuacao = 0;
+            arv_libera(arvore_de_palavras);
+            while(strlen(entrada) > 0)
+            {
+                entrada[strlen(entrada) - 1] = '\0';
+            }
+        }
     }
-    tela_limpa();
-
-    tela_fim();
-    tela_atualiza();
-
-    // TODO tela de final
-    printf("Pontuação: %d\n", pontuacao);
 
     // atualiza o arquivo dos maiores recordistas
+    tela_limpa();
+    
     atualiza_top5(pontuacao);
     
     tecla_fim();

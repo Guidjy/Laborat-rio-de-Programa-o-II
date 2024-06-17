@@ -10,11 +10,33 @@
 #include "abb.h"
 #include "lista.h"
 
+
 // cada palavra tem um tempo até ser inserida.
 struct _word
 {
     char palavra[17];
     double tempo;
+};
+
+
+// estrutura de um nó de lista
+struct _no
+{
+    void *dado;          // ponteiro genêrico para o dado do nó
+    char *tipo;          // tipo do dado armazenado no nó
+    struct _no *ant;     // ponteiro para o nó anterior
+    struct _no *prox;    // ponteiro para o próximo nó
+};
+// define um tipo que é um ponteiro para a estrutura do nó
+typedef struct _no *No;
+
+
+// estrutura de um descritor da lista
+struct _lista
+{
+    int n_elem;     // número de elementos na lista
+    No pri;         // ponteiro para o primeiro elemento da lista
+    No ult;         // ponteiro para o último elemento da lista
 };
 
 
@@ -194,7 +216,7 @@ static void get_string(char s[20])
     while (true)
     {
         caractere = tecla_le_char();
-        if (caractere == '\n' || i == 19)
+        if (caractere == '\n' || i == 18)
         {
             break;
         }
@@ -208,8 +230,10 @@ static void get_string(char s[20])
             i++;
             printf("%c", caractere);
         }
+        tela_atualiza();
     }
-    string[i] = '\0';
+    string[i] = ',';
+    string[i+1] = '\0';
     strcpy(s, string);
 }
 
@@ -225,19 +249,75 @@ void atualiza_top5(int pontuacao)
         printf("ERRO NA ABERTURA DO ARQUIVO\n");
         return;
     }
-    // listas para armazenar os dados do arquivo
-    Lista top5_nomes = lista_cria();   // armazena os nomes dos jogadores
-    Lista top5_pontos = lista_cria();  // armazena os pontos dos jogadores
+
+    // vetores para armazenar os dados do arquivo
+    char top5_nomes[6][20];   // armazena os nomes dos jogadores
+    int top5_pontos[6];       // armazena os pontos dos jogadores
+
+    int n_jogadores = 0;      // guarda o número de jogadores no arquivo
+    char nome_jogador[20];    // guarda o nome do jogador dessa partida
+
+    // buffers para ler os conteúdos do arquivo
     char buffer_nome[20];
     int buffer_pontuacao;
     // lê os dados do arquivo
     while (fscanf(top5, "%s %d", buffer_nome, &buffer_pontuacao) != EOF)
     {
-        // insere-os nas listas
-        lista_enqueue(top5_nomes, buffer_nome, "string");
-        lista_enqueue(top5_pontos, &buffer_pontuacao, "int");
+        // insere-os nos vetores
+        strcpy(top5_nomes[n_jogadores], buffer_nome);
+        top5_pontos[n_jogadores] = buffer_pontuacao;
+        n_jogadores++; 
     }
     fclose(top5);
+
+    // imprime os dados lidos para testagem
+    /*
+    for (int i = 0; i < n_jogadores; i++)
+    {
+        tela_lincol(10 + i, 1);
+        printf("%s, %d\n", top5_nomes[i], top5_pontos[i]);
+    }
+    tela_atualiza();
+    */
+
+    // se o top 5 não estiver cheio
+    if (n_jogadores < 5)
+    {
+        // pede o nome do jogador atual e registra-o no top 5
+        tela_lincol(13, 44);
+        tela_cor_letra(255, 255, 102);
+        printf("Parabéns! Você está entre os 5 melhores!");
+        tela_lincol(14, 44);
+        tela_cor_normal();
+        printf("Digite seu nome: ");
+        tela_atualiza();
+        get_string(nome_jogador);
+    }
+    // se o top 5 ja tiver 5 membros
+    else
+    {
+        // variável de controle que indica se o nome do jogador atual ja foi registrado
+        bool registrado = false;
+        // percorre o vetor de pontuações
+        for (int i = 0; i < 5; i++)
+        {
+            // se a pontuação do jogador atual for maior do que a de alguem no top 5
+            if (pontuacao > top5_pontos[i] && !registrado)
+            {
+                // pede o nome do jogador atual e registra-o no top 5
+                tela_lincol(13, 44);
+                tela_cor_letra(255, 255, 102);
+                printf("Parabéns! Você está entre os 5 melhores!");
+                tela_lincol(14, 44);
+                tela_cor_normal();
+                printf("Digite seu nome: ");
+                tela_atualiza();
+                get_string(nome_jogador);
+                registrado = true;
+            }
+        }
+    }
+    
     // abre o arquivo para escrever
     top5 = fopen("top5.csv", "w");
     if (top5 == NULL)
@@ -245,49 +325,33 @@ void atualiza_top5(int pontuacao)
         printf("ERRO NA ABERTURA DO ARQUIVO\n");
         return;
     }
-    // atualiza o top 5
-    int n_jogadores = lista_n_elem(top5_nomes);
-    // se o arquivo estiver vazio
-    if (n_jogadores == 0)
+
+    // variável de controle que indica se o nome do jogador atual ja foi registrado
+    bool registrado = false;
+    // indica quantos jogadores/pontuações ja foram registradas no arquivo
+    int n_registrados = 0;
+    // percorre o vetor de jogadores e o vetor de pontuações
+    for (int i = 0; n_registrados < n_jogadores + 1 && n_registrados < 5; i++)
     {
-        // pede o nome do jogador atual
-        char nome_jogador[20];
-        printf("Parabéns! Você está entre os 5 melhores!\n");
-        printf("Digite seu nome: \n");
-        tela_atualiza();
-        get_string(nome_jogador);
-        // escreve seu nome e pontuação no arquivo
-        fprintf(top5, "%s, %d\n", nome_jogador, pontuacao);
-    }
-    // mudar TODO
-    for (int i = 0; i < n_jogadores; i++)
-    {
-        strcpy(buffer_nome, (char*)lista_dequeue(top5_nomes));
-        buffer_pontuacao = *(int*)lista_dequeue(top5_pontos);
-        // verifica se a pontuação dessa partida foi maior do que uma do top 10
-        if (pontuacao > buffer_pontuacao)
+        // se a pontuação do jogador atual for maior que a de um jogador no top5
+        if ((pontuacao > top5_pontos[i] && !registrado) || n_jogadores == 0)
         {
-            // se sim, pede o nome do jogador atual
-            char nome_jogador[20];
-            printf("Parabéns! Você está entre os 5 melhores!\n");
-            printf("Digite seu nome: \n");
-            tela_atualiza();
-            get_string(nome_jogador);
-            // escreve seu nome e pontuação no arquivo
-            fprintf(top5, "%s, %d\n", nome_jogador, pontuacao);
-            // zera a pontuação para que ela não seja inserida denovo
-            pontuacao = 0;
-            i++;
+            // insere o jogador atual e sua pontuaçã no top5 
+            fprintf(top5, "%s %d\n", nome_jogador, pontuacao);
+            n_registrados++;
+            registrado = true;
+            // verifica se ja não foram registrados 5 jogadores no arquivo
+            if (n_registrados == 5)
+            {
+                break;
+            }
         }
-        // verifica novamente se ja não foram escritos 5 nomes
-        if (i < n_jogadores)
+        // testa se o número de jogadores é maior do que zero para não escrever lixo no arquivo
+        if (n_jogadores > 0)
         {
-            fprintf(top5, "%s %d\n", buffer_nome, buffer_pontuacao);
+            // escreve os dados do top5 no arquivo
+            fprintf(top5, "%s %d\n", top5_nomes[i], top5_pontos[i]);
+            n_registrados++;
         }
     }
-    // fecha o arquivo e salva os dados
-    fclose(top5);
-    // libera as listas
-    lista_libera(top5_nomes);
-    lista_libera(top5_pontos);
 }

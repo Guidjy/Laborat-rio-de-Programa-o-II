@@ -26,8 +26,14 @@ int arv_altura(arv self);
 // calcula o fator de equilíbrio de uma árvore
 int arv_fator_de_equilibrio(arv self);
 
+// retorna true se um nó for uma folha
+bool eh_folha(arv self);
+
 // imprime uma árvore.
 // recebe um ponteiro para a raíz e o nível da qual deve começar a imprimir
 void arv_imprime(arv raiz, int nivel);
+
+// libera a árvore inteira
+void arv_libera(arv self);
 
 #endif

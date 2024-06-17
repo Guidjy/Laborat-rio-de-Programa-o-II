@@ -8,7 +8,6 @@
 #include "tecla.h"
 #include "tela.h"
 #include "abb.h"
-#include "lista.h"
 
 
 // cada palavra tem um tempo até ser inserida.
@@ -16,27 +15,6 @@ struct _word
 {
     char palavra[17];
     double tempo;
-};
-
-
-// estrutura de um nó de lista
-struct _no
-{
-    void *dado;          // ponteiro genêrico para o dado do nó
-    char *tipo;          // tipo do dado armazenado no nó
-    struct _no *ant;     // ponteiro para o nó anterior
-    struct _no *prox;    // ponteiro para o próximo nó
-};
-// define um tipo que é um ponteiro para a estrutura do nó
-typedef struct _no *No;
-
-
-// estrutura de um descritor da lista
-struct _lista
-{
-    int n_elem;     // número de elementos na lista
-    No pri;         // ponteiro para o primeiro elemento da lista
-    No ult;         // ponteiro para o último elemento da lista
 };
 
 
@@ -355,3 +333,4 @@ void atualiza_top5(int pontuacao)
         }
     }
 }
+

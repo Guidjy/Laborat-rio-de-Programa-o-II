@@ -9,6 +9,9 @@
 // estrutura de um nó da árvore
 struct _no_arv
 {
+    int lin;                // posição vertical do nó na tela
+    int col;                // posição horizontal do nó na tela
+    int pos_no_nivel;       // posição da árvore no nível
     char *palavra;          // string com a palavra armazenada no nó
     struct _no_arv *esq;    // ponteiro para o filho esquerdo
     struct _no_arv *dir;    // ponteiro para o filho direito
@@ -40,7 +43,7 @@ arv arv_cria()
 
 bool arv_vazia(arv self)
 {
-    return self->esq == NULL && self->esq == NULL;
+    return self->esq == NULL && self->dir == NULL;
 }
 
 
@@ -71,13 +74,17 @@ bool string_menor(char *a, char *b)
 
 void arv_insere(arv self, char *pal)
 {
+    // guarda a posição da árvore no nível (necessário para impressão)
+    static int pos_no_nivel = 0;
     // se a árvore / sub-árvore estiver vazia, altera os dados da raíz
     if (arv_vazia(self))
     {
         self->palavra = (char *) malloc(strlen(pal) + 1);
+        self->pos_no_nivel = pos_no_nivel;
         strcpy(self->palavra, pal);
         self->esq = cria_no_vazio();
         self->dir = cria_no_vazio();
+        pos_no_nivel = 0;
     }
     // se a palavra que quer inserir ja estiver na árvore, não insere
     else if (strings_iguais(pal, self->palavra))
@@ -88,11 +95,13 @@ void arv_insere(arv self, char *pal)
     // deve-se inseri-la na sub-árvore esquerda
     else if (string_menor(pal, self->palavra))
     {
+        pos_no_nivel = pos_no_nivel * 2;
         arv_insere(self->esq, pal);
     }
     // se não, insere na sub-árvore direita
     else
     {
+        pos_no_nivel = pos_no_nivel * 2 + 1; 
         arv_insere(self->dir, pal);
     }
 }
@@ -227,4 +236,16 @@ void arv_imprime(arv raiz, int nivel)
     printf("%s\n", raiz->palavra);
     // Imprime a subárvore esquerda
     arv_imprime(raiz->esq, nivel + 1);
+}
+
+
+void arv_libera(arv self)
+{
+    if (arv_vazia(self))
+    {
+        return;
+    }
+    arv_libera(self->esq);
+    arv_libera(self->dir);
+    esvazia_no(self);
 }

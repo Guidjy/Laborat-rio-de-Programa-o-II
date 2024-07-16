@@ -52,7 +52,7 @@ void grafo_arestas_que_partem(Grafo self, int origem);
 // as próximas chamadas a 'grafo_proxima_aresta' devem retornar os valores correspondentes
 //   à cada aresta que chega nesse nó
 void grafo_arestas_que_chegam(Grafo self, int destino);
-// retorna a próxima aresta, de acordo com a última consulta iniciada por 
+// retorna a próxima aresta, de acordo com a última consulta iniciada por
 //   'grafo_arestas_que_partem' ou 'grafo_arestas_que_chegam'
 // o valor do nó vizinho ao nó da consulta deve ser colocado em 'vizinho' (se não for NULL),
 //   o valor associado à aresta deve ser colocado em '*pdado' (se não for NULL) e a função
@@ -70,5 +70,7 @@ bool grafo_tem_ciclo(Grafo self);
 // deve retornar uma fila vazia caso tal ordem não exista
 // quem chama esta função é responsável por destruir a fila.
 Fila grafo_ordem_topologica(Grafo self);
+
+void grafo_imprime(Grafo self);
 
 #endif //_GRAFO_H_

@@ -10,6 +10,7 @@ struct _no_grafo
     int no_id;               // inteiro que indentifica o nó
     void *valor_no;          // ponteiro para o valor associado ao nó
     void *valor_aresta;      // ponteiro para o valor associado à aresta
+    bool consultado;         // usado por grafo_proxima_aresta(...)
     struct _no_grafo *prox;  // ponteiro para o próximo nó na lista de adjacência
 };
 typedef struct _no_grafo *No_grafo;
@@ -22,9 +23,15 @@ struct _grafo
     int tam_aresta;                  // tamanho em bytes do valor associado à aresta
     int cap;                         // capacidade do vetor de listas de adjacência
     int n_nos;                       // número de nós no grafo
+    int no_em_consulta;              // usado por grafo_proxima_aresta(...)
     No_grafo *listas_de_adjacencia;  // vetor de listas de adjacência
 };
 // typedef struct _grafo *Grafo; >>> grafo.h
+
+
+// indica se está sendo realizada uma consulta de arestas que partem (0) ou arestas que chegam (1) à um nó.
+// -1 = não tem consulta sendo realizada
+int tipo_consulta = -1;
 
 
 Grafo grafo_cria(int tam_no, int tam_aresta)
@@ -93,6 +100,7 @@ static No_grafo no_grafo_cria(Grafo self, int no_id)
     // inicializa os descritores
     novo_no->no_id = no_id;
     novo_no->prox = NULL;
+    novo_no->consultado = false;
 
     // aloca memória para os ponteiros de valores
     novo_no->valor_no = malloc(self->tam_no);
@@ -342,6 +350,99 @@ bool grafo_valor_aresta(Grafo self, int origem, int destino, void *pdado)
         p = p->prox;
     }
     return false;
+}
+
+
+void grafo_arestas_que_partem(Grafo self, int origem)
+{
+    // marca a realização de uma consulta de arestas que partem
+    tipo_consulta = 0;
+    self->no_em_consulta = origem;
+}
+
+
+void grafo_arestas_que_chegam(Grafo self, int destino)
+{
+    // marca a realização de uma consulta de arestas que chegam
+    tipo_consulta = 1;
+    self->no_em_consulta = destino;
+}
+
+
+// marca todas as arestas como não consultadas
+static void marca_tudo_nao_consultado(Grafo self)
+{
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        No_grafo p = self->listas_de_adjacencia[i];
+        while (p != NULL)
+        {
+            p->consultado = false;
+            p = p->prox;
+        }
+    }
+}
+
+
+// retorna a próxima aresta, de acordo com a última consulta iniciada por
+//   'grafo_arestas_que_partem' ou 'grafo_arestas_que_chegam'
+// o valor do nó vizinho ao nó da consulta deve ser colocado em 'vizinho' (se não for NULL),
+//   o valor associado à aresta deve ser colocado em '*pdado' (se não for NULL) e a função
+//   deve retornar true. Caso não exista mais aresta que satisfaça a consulta, retorna
+//   false.
+bool grafo_proxima_aresta(Grafo self, int *vizinho, void *pdado)
+{
+    // se a consulta sendo feita é de arestas que partem
+    if (tipo_consulta == 0)
+    {
+        // percorre a lista de adjacência do nó em consulta
+        No_grafo p = self->listas_de_adjacencia[self->no_em_consulta]->prox;
+        while (p != NULL)
+        {
+            // se achar uma aresta que não foi consultada
+            if (!p->consultado)
+            {
+                // copia o número do nó destino da aresta para vizinho
+                memmove(vizinho, &p->no_id, sizeof(int));
+                // copia o valor da aresta para pdado
+                memmove(pdado, p->valor_aresta, self->tam_aresta);
+                // marca a aresta como consultada
+                p->consultado = true;
+                return true;
+            }
+            p = p->prox;
+        }
+        // Caso não exista mais aresta que satisfaça a consulta
+        marca_tudo_nao_consultado(self);
+        return false;
+    }
+    // se a consulta sendo feita é de arestas que chegam
+    else if (tipo_consulta == 1)
+    {
+        // percorre cada lista de adjacência
+        for (int i = 0; i < self->n_nos; i++)
+        {
+            No_grafo p = self->listas_de_adjacencia[i]->prox;
+            while (p != NULL)
+            {
+                // se achar uma aresta que incide no nó em consulta
+                if (p->no_id == self->no_em_consulta && !p->consultado)
+                {
+                    // copia o número do nó origem da aresta para vizinho
+                    memmove(vizinho, &self->listas_de_adjacencia[i]->no_id, sizeof(int));
+                    // copia o valor da aresta para pdado
+                    memmove(pdado, p->valor_aresta, self->tam_aresta);
+                    // marca a aresta como consultada
+                    p->consultado = true;
+                    return true;
+                }
+                p = p->prox;
+            }
+        }
+        // Caso não exista mais aresta que satisfaça a consulta
+        marca_tudo_nao_consultado(self);
+        return false;
+    }
 }
 
 

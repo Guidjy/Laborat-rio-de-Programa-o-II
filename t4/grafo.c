@@ -231,6 +231,12 @@ void grafo_remove_no(Grafo self, int no)
 }
 
 
+void grafo_altera_valor_no(Grafo self, int no, void *pdado)
+{
+    memmove(self->listas_de_adjacencia[no]->valor_no, pdado, self->tam_no);
+}
+
+
 void grafo_valor_no(Grafo self, int no, void *pdado)
 {
     memmove(pdado, self->listas_de_adjacencia[no]->valor_no, self->tam_no);
@@ -319,6 +325,26 @@ void grafo_altera_valor_aresta(Grafo self, int origem, int destino, void *pdado)
 }
 
 
+// coloca em pdado (se não for NULL) o valor associado à aresta, se existir
+// retorna true se a aresta entre os nós origem e destino existir, e false se não existir
+bool grafo_valor_aresta(Grafo self, int origem, int destino, void *pdado)
+{
+    // percorre a lista de adjacência do nó em origem
+    No_grafo p = self->listas_de_adjacencia[origem]->prox;
+    while (p != NULL)
+    {
+        // se existir uma aresta até o nó destino
+        if (p->no_id == destino)
+        {
+            memmove(pdado, p->valor_no, self->tam_no);
+            return true;
+        }
+        p = p->prox;
+    }
+    return false;
+}
+
+
 // algoritmos
 
 
@@ -358,9 +384,3 @@ void grafo_imprime(Grafo self)
     printf("cap:   %d\n", self->cap);
     printf("\n\n");
 }
-
-
-
-
-
-

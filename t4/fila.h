@@ -5,22 +5,19 @@
 
 typedef struct _fila *Fila;
 
-// cria uma fila vazia
-Fila fila_cria();
+// cria uma fila vazia que suporta dados do tamanho fornecido (em bytes)
+Fila fila_cria(int tam_do_dado);
 
-// verifica se uma fila está vazia
+void fila_destroi(Fila self);
+
 bool fila_vazia(Fila self);
 
-// enfilera um dado
-void fila_enfilera(Fila self, int num);
+void fila_remove(Fila self, void *pdado);
 
-// desenfilera a fila e retorna o dado do nó desenfilerado
-int fila_desenfilera(Fila self);
+void fila_insere(Fila self, void *pdado);
 
-// imprime uma fila
-void fila_imprime(Fila self);
+void fila_inicia_percurso(Fila self, int pos_inicial);
 
-// libera a memória alocada para uma fila
-void fila_libera(Fila self);
+bool fila_proximo(Fila self, void *pdado);
 
-#endif
+#endif // _FILA_H_

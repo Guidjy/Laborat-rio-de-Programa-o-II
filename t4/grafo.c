@@ -56,6 +56,27 @@ Grafo grafo_cria(int tam_no, int tam_aresta)
 }
 
 
+void grafo_destroi(Grafo self)
+{
+    // libera as listas de adjacência
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        No_grafo p = self->listas_de_adjacencia[i];
+        while (p != NULL)
+        {
+            No_grafo temp = p->prox;
+            free(p->valor_no);
+            free(p->valor_aresta);
+            free(p);
+            p = temp;
+        }
+    }
+    // libera o grafo
+    free(self->listas_de_adjacencia);
+    free(self);
+}
+
+
 // Funções de manipulação de nós (vértices)
 
 
@@ -128,6 +149,88 @@ int grafo_insere_no(Grafo self, void *pdado)
 }
 
 
+void grafo_remove_no(Grafo self, int no)
+{
+    // 0-0: essa função podia ser otimizada mas dessa forma da pra enxergar todas as operações de forma mais clara
+
+    // verifica se o grafo está vazio
+    if (self->n_nos == 0)
+    {
+        printf("GRAFO VAZIO, NÃO PODE REMOVER NÓS\n");
+        return;
+    }
+
+    // remove todas as arestas que incidem sobre o nó a ser removido
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        No_grafo p = self->listas_de_adjacencia[i];
+        No_grafo p_ant = NULL;
+        while (p != NULL && p->no_id != no)
+        {
+            p_ant = p;
+            p = p->prox;
+        }
+        // se achou o nó e ele não for o primeiro da lista, remove-o
+        // (a remoção da própria lista de adjacências do nó a ser removido será tratada depois)
+        if (p != NULL)
+        {
+            if (p_ant == NULL)
+            {
+                self->listas_de_adjacencia[i] = p->prox;
+            }
+            else
+            {
+                p_ant->prox = p->prox;
+            }
+            free(p->valor_no);
+            free(p->valor_aresta);
+            free(p);
+        }
+    }
+
+    // corrige a indentificação dos nós
+    // "a identificação dos nós remanescentes é alterada, como se esse nó nunca tivesse existido"
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        No_grafo p = self->listas_de_adjacencia[i];
+        while (p != NULL)
+        {
+            if (p->no_id > no)
+            {
+                p->no_id--;
+            }
+            p = p->prox;
+        }
+    }
+
+    // libera a lista de adjacência do nó a ser removido
+    No_grafo p = self->listas_de_adjacencia[no];
+    while (p != NULL)
+    {
+        No_grafo temp = p->prox;
+        free(p->valor_no);
+        free(p->valor_aresta);
+        free(p);
+        p = temp;
+    }
+
+    // ajusta a posição das listas de adjacência no vetor
+    for (int i = no; i < self->n_nos - 1; i++)
+    {
+        self->listas_de_adjacencia[i] = self->listas_de_adjacencia[i + 1];
+    }
+    p = self->listas_de_adjacencia[self->n_nos - 1];
+
+    // se necessário, realoca memória para o vetor de listas de adjacência
+    self->n_nos--;
+    if (self->n_nos > self->cap / 2 && self->cap / 2 >= 10)
+    {
+        self->cap /= 2;
+        realoca_vetor(self);
+    }
+}
+
+
 void grafo_valor_no(Grafo self, int no, void *pdado)
 {
     memmove(pdado, self->listas_de_adjacencia[no]->valor_no, self->tam_no);
@@ -145,9 +248,12 @@ int grafo_nnos(Grafo self)
 
 void grafo_altera_valor_aresta(Grafo self, int origem, int destino, void *pdado)
 {
-    // altera o valor da aresta que interliga o nó origem ao nó destino (copia de *pdado)
-    // caso a aresta não exista, deve ser criada
-    // caso pdado seja NULL, a aresta deve ser removida
+    // verifica se os índices de origem e destino são válidos
+    if (origem >= self->n_nos || destino >= self->n_nos)
+    {
+        printf("ÍNDICES DE ORIGEM E/OU DESTINO DE ARESTA INVÁLIDO(S)\n");
+        return;
+    }
 
     // se pdado for NULL, a aresta deve ser removida
     if (pdado == NULL)
@@ -185,10 +291,12 @@ void grafo_altera_valor_aresta(Grafo self, int origem, int destino, void *pdado)
         // percorre a lista de adjacências do nó em origem
         No_grafo p = self->listas_de_adjacencia[origem];
         No_grafo p_ant = NULL;
-        while (p != NULL && p->no_id != destino)
+        int cont = 0;  // cabeça da lista não conta como aresta para si mesma
+        while ((p != NULL && p->no_id != destino) || cont == 0)
         {
             p_ant = p;
             p = p->prox;
+            cont++;
         }
         // caso uma aresta conectando origem e destino não exista, deve ser criada
         if (p == NULL)
@@ -256,8 +364,3 @@ void grafo_imprime(Grafo self)
 
 
 
-
-int grafo_nnos(Grafo self)
-{
-    return self->n_nos;
-}

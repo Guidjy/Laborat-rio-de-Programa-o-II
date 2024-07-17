@@ -384,16 +384,16 @@ void processa_rede(Rede rede, estado *j) {
 void processa_teclado(estado *j) {
   char c = tecla_le_char();
   switch (c) {
-  case 'w':
+  case 'u':
     j->aninha.dir = cima;
     break;
-  case 'a':
+  case 'n':
     j->aninha.dir = esquerda;
     break;
-  case 's':
+  case 'e':
     j->aninha.dir = baixo;
     break;
-  case 'd':
+  case 'i':
     j->aninha.dir = direita;
     break;
   }

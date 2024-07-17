@@ -4,14 +4,24 @@
 #include "grafo.h"
 
 
+// indica o estado de consulta/visita de um nó do grafo
+enum _consulta
+{
+    NAO_CONSULTADO,
+    EM_CONSULTA,
+    CONSULTADO
+};
+typedef enum _consulta estado_de_consulta;
+
+
 // estrutura de um nó das listas de adjacência do grafo
 struct _no_grafo
 {
-    int no_id;               // inteiro que indentifica o nó
-    void *valor_no;          // ponteiro para o valor associado ao nó
-    void *valor_aresta;      // ponteiro para o valor associado à aresta
-    bool consultado;         // usado por grafo_proxima_aresta(...)
-    struct _no_grafo *prox;  // ponteiro para o próximo nó na lista de adjacência
+    int no_id;                  // inteiro que indentifica o nó
+    void *valor_no;             // ponteiro para o valor associado ao nó
+    void *valor_aresta;         // ponteiro para o valor associado à aresta
+    estado_de_consulta estado;  // usado por grafo_proxima_aresta(...) e pelos algoritmos 
+    struct _no_grafo *prox;     // ponteiro para o próximo nó na lista de adjacência
 };
 typedef struct _no_grafo *No_grafo;
 
@@ -100,7 +110,7 @@ static No_grafo no_grafo_cria(Grafo self, int no_id)
     // inicializa os descritores
     novo_no->no_id = no_id;
     novo_no->prox = NULL;
-    novo_no->consultado = false;
+    novo_no->estado = NAO_CONSULTADO;
 
     // aloca memória para os ponteiros de valores
     novo_no->valor_no = malloc(self->tam_no);
@@ -377,7 +387,7 @@ static void marca_tudo_nao_consultado(Grafo self)
         No_grafo p = self->listas_de_adjacencia[i];
         while (p != NULL)
         {
-            p->consultado = false;
+            p->estado = NAO_CONSULTADO;
             p = p->prox;
         }
     }
@@ -400,14 +410,14 @@ bool grafo_proxima_aresta(Grafo self, int *vizinho, void *pdado)
         while (p != NULL)
         {
             // se achar uma aresta que não foi consultada
-            if (!p->consultado)
+            if (p->estado == NAO_CONSULTADO)
             {
-                // copia o número do nó destino da aresta para vizinho
-                memmove(vizinho, &p->no_id, sizeof(int));
-                // copia o valor da aresta para pdado
-                memmove(pdado, p->valor_aresta, self->tam_aresta);
+                // copia o número do nó destino da aresta para vizinho (se não for NULL)
+                if (vizinho != NULL) memmove(vizinho, &p->no_id, sizeof(int));
+                // copia o valor da aresta para pdado (se não for NULL)
+                if (pdado != NULL) memmove(pdado, p->valor_aresta, self->tam_aresta);
                 // marca a aresta como consultada
-                p->consultado = true;
+                p->estado = CONSULTADO;
                 return true;
             }
             p = p->prox;
@@ -426,14 +436,14 @@ bool grafo_proxima_aresta(Grafo self, int *vizinho, void *pdado)
             while (p != NULL)
             {
                 // se achar uma aresta que incide no nó em consulta
-                if (p->no_id == self->no_em_consulta && !p->consultado)
+                if (p->no_id == self->no_em_consulta && p->estado == NAO_CONSULTADO)
                 {
-                    // copia o número do nó origem da aresta para vizinho
-                    memmove(vizinho, &self->listas_de_adjacencia[i]->no_id, sizeof(int));
-                    // copia o valor da aresta para pdado
-                    memmove(pdado, p->valor_aresta, self->tam_aresta);
+                    // copia o número do nó origem da aresta para vizinho (se não for NULL)
+                    if (vizinho != NULL) memmove(vizinho, &self->listas_de_adjacencia[i]->no_id, sizeof(int));
+                    // copia o valor da aresta para pdado (se não for NULL)
+                    if (pdado != NULL) memmove(pdado, p->valor_aresta, self->tam_aresta);
                     // marca a aresta como consultada
-                    p->consultado = true;
+                    p->estado = CONSULTADO;
                     return true;
                 }
                 p = p->prox;
@@ -447,6 +457,67 @@ bool grafo_proxima_aresta(Grafo self, int *vizinho, void *pdado)
 
 
 // algoritmos
+
+
+bool grafo_tem_ciclo(Grafo self)
+{
+    // detecta ciclos com base no grau de entrada dos nós (aciclico_por_grau_de_entrada() >>> aula 23)
+    //
+    // " Outra forma de detecção de ciclos é baseada na idéia de que um nó que pertence a um ciclo
+    //   obrigatoriamente tem pelo menos uma aresta de chegada e uma de saída
+    //   (o grau de entrada e o grau de saída de um nó pertencente a um ciclo não podem ser 0). "
+    //
+    // " essa implementação mantém um vetor com o grau de entrada de cada nó,
+    //   que vão sendo alterados conforme cada nó com grau de entrada zero é analisado.
+    //   Os nós que já foram identificados com grau de entrada 0 e ainda não foram analisados são mantidos em uma fila "
+
+    // inicializa um vetor com o grau de entrada dos nós
+    int grau_de_entrada[self->n_nos];
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        grau_de_entrada[i] = 0;
+        // incrementa o grau de entrada do nó i para cada aresta que chega nele
+        grafo_arestas_que_chegam(self, i);
+        while (grafo_proxima_aresta(self, NULL, NULL))
+        {
+            grau_de_entrada[i]++;
+        }
+    }
+
+    // inicializa uma fila com todos os nós que tem grau de entrada 0
+    Fila nos_grau_0 = fila_cria(sizeof(int));
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        if (grau_de_entrada[i] == 0)
+        {
+            fila_insere(nos_grau_0, &i);
+        }
+    }
+
+    int analisados = 0;  // conta o número de nós analisados (nós com grau de entrada 0)
+    while (!fila_vazia(nos_grau_0))
+    {
+        // desenfilera a fila e guarda o nó desenfilerado em no_removido
+        int no_removido;
+        fila_remove(nos_grau_0, &no_removido);
+        // decrementa o grau de entrada de cada nó destino de uma aresta que parte do no_removido
+        // se o grau de entrada desse nó ficar 0 após ser decrementado, insere na fila
+        grafo_arestas_que_partem(self, no_removido);
+        int no_destino;
+        while (grafo_proxima_aresta(self, &no_destino, NULL))
+        {
+            grau_de_entrada[no_destino]--;
+            if (grau_de_entrada[no_destino] == 0)
+            {
+                fila_insere(nos_grau_0, &no_destino);
+            }
+        }
+        analisados++;
+    }
+    fila_destroi(nos_grau_0);
+    // se nem todos os nós foram analisados, o grafo é cíclico.
+    return analisados != self->n_nos;
+}
 
 
 void grafo_imprime(Grafo self)

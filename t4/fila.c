@@ -119,3 +119,20 @@ bool fila_proximo(Fila self, void *pdado)
   // o dado foi encontrado, o percurso ainda não terminou
   return true;
 }
+
+
+void fila_imprime(Fila self)
+{
+  if (fila_vazia(self))
+  {
+    printf("[]\n");
+    return;
+  }
+  int *vetor = (int*)self->espaco;
+  printf("[");
+  for (int i = 0; i < self->n_elem - 1; i++)
+  {
+    printf("%d, ", vetor[i]);
+  }
+  printf("%d]\n", vetor[self->n_elem-1]);
+}

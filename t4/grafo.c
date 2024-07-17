@@ -520,6 +520,68 @@ bool grafo_tem_ciclo(Grafo self)
 }
 
 
+Fila grafo_ordem_topologica(Grafo self)
+{
+    // inicializa um vetor com o grau de entrada dos nós
+    int grau_de_entrada[self->n_nos];
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        grau_de_entrada[i] = 0;
+        // incrementa o grau de entrada do nó i para cada aresta que chega nele
+        grafo_arestas_que_chegam(self, i);
+        while (grafo_proxima_aresta(self, NULL, NULL))
+        {
+            grau_de_entrada[i]++;
+        }
+    }
+
+    // inicializa uma fila com todos os nós que tem grau de entrada 0
+    Fila nos_grau_0 = fila_cria(sizeof(int));
+    for (int i = 0; i < self->n_nos; i++)
+    {
+        if (grau_de_entrada[i] == 0)
+        {
+            fila_insere(nos_grau_0, &i);
+        }
+    }
+
+    // inicializa uma fila que conterá os nós em ordem topológica
+    Fila ordem_topologica = fila_cria(sizeof(int));
+    int ordenados = 0;  // conta o número de nós na fila ordem_topologica
+    while (!fila_vazia(nos_grau_0))
+    {
+        // desenfilera nos_grau+0 e guarda o nó desenfilerado em no_removido
+        int no_removido;
+        fila_remove(nos_grau_0, &no_removido);
+        // decrementa o grau de entrada de cada nó destino de uma aresta que parte do no_removido
+        // se o grau de entrada desse nó ficar 0 após ser decrementado, insere na fila
+        grafo_arestas_que_partem(self, no_removido);
+        int no_destino;
+        while (grafo_proxima_aresta(self, &no_destino, NULL))
+        {
+            grau_de_entrada[no_destino]--;
+            if (grau_de_entrada[no_destino] == 0)
+            {
+                fila_insere(nos_grau_0, &no_destino);
+            }
+        }
+        fila_insere(ordem_topologica, &no_removido);
+        ordenados++;
+    }
+    fila_destroi(nos_grau_0);
+    // se o grafo tem ciclo, não tem ordem topológica
+    if (ordenados != self->n_nos)
+    {
+        // esvazia a fila de ordem topológica
+        while (!fila_vazia(ordem_topologica))
+        {
+            fila_remove(ordem_topologica, NULL);
+        }
+    }
+    return ordem_topologica;
+}
+
+
 void grafo_imprime(Grafo self)
 {
     // se o grafo estiver vazio
@@ -554,5 +616,5 @@ void grafo_imprime(Grafo self)
     }
     printf("n_nos: %d\n", self->n_nos);
     printf("cap:   %d\n", self->cap);
-    printf("\n\n");
+    printf("\n");
 }

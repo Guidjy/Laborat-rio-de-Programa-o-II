@@ -422,9 +422,6 @@ bool grafo_proxima_aresta(Grafo self, int *vizinho, void *pdado)
             }
             p = p->prox;
         }
-        // Caso não exista mais aresta que satisfaça a consulta
-        marca_tudo_nao_consultado(self);
-        return false;
     }
     // se a consulta sendo feita é de arestas que chegam
     else if (tipo_consulta == 1)
@@ -449,10 +446,10 @@ bool grafo_proxima_aresta(Grafo self, int *vizinho, void *pdado)
                 p = p->prox;
             }
         }
-        // Caso não exista mais aresta que satisfaça a consulta
-        marca_tudo_nao_consultado(self);
-        return false;
     }
+    // Caso não exista mais aresta que satisfaça a consulta
+    marca_tudo_nao_consultado(self);
+    return false;
 }
 
 

@@ -354,7 +354,7 @@ bool grafo_valor_aresta(Grafo self, int origem, int destino, void *pdado)
         // se existir uma aresta até o nó destino
         if (p->no_id == destino)
         {
-            memmove(pdado, p->valor_no, self->tam_aresta);
+            memmove(pdado, p->valor_aresta, self->tam_aresta);
             return true;
         }
         p = p->prox;

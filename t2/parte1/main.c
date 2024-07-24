@@ -7,64 +7,64 @@ int main()
     printf(">>>cria uma fila vazia de inteiros\n");
     Fila f = fila_cria(sizeof(int));
     fila_imprime(f);
-    printf("\n");
 
-    // insere 1 - 5
-    printf(">>>insere 1 - 5\n");
-    int pdado;
     // insere 1
-    pdado = 1;
-    fila_insere(f, &pdado);
+    printf("\n>>>insere 1\n");
+    int dado = 1;
+    fila_insere(f, &dado);
+    fila_imprime(f);
+
     // insere 2 - 5
+    printf("\n>>>insere 2 - 5\n");
     for (int i = 2; i < 6; i++)
     {
-        pdado = i;
-        fila_insere(f, &pdado);
+        dado = i;
+        fila_insere(f, &dado);
     }
     fila_imprime(f);
-    printf("\n");
 
-    // desenfilera
-    printf(">>>desenfilera\n");
-    fila_remove(f, &pdado);
+    // desenfilera uma vez
+    printf("\n>>>desenfilera\n");
+    fila_remove(f, &dado);
     fila_imprime(f);
-    printf(">removido: %d\n\n", pdado);
+    printf(">removido: %d\n", dado);
 
-    // desenfilera denovo
-    printf("desenfilera denovo\n");
-    fila_remove(f, &pdado);
-    fila_imprime(f);
-    printf(">removido: %d\n\n", pdado);
-
-    // remove tudo
-    printf(">>>remove tudo\n");
-    while (!fila_vazia(f))
+    // desenfilera tudo
+    printf("\n>>>desenfilera tudo\n");
+    while(!fila_vazia(f))
     {
         fila_remove(f, NULL);
     }
     fila_imprime(f);
-    printf("\n");
 
-    // insere 6
-    printf(">>>insere 6\n");
-    pdado = 6;
-    fila_insere(f, &pdado);
-    fila_imprime(f);
-    printf("\n");
-
-    // insere 7 - 15
-    printf(">>>insere 7 - 15\n");
-    for (int i = 7; i < 16; i++)
+    // insere 6 - 15
+    printf("\n>>>insere 6 - 15\n");
+    for(int i = 6; i < 16; i++)
     {
-        pdado = i;
-        fila_insere(f, &pdado);
+        dado = i;
+        fila_insere(f, &dado);
     }
     fila_imprime(f);
-    printf("\n");
 
-    // inserçã e remoção pré realloc OK
+    // tenta inserir um a mais
+    printf("\n>>>tenta inserir um a mais\n");
+    dado = 16;
+    fila_insere(f, &dado);
+    fila_imprime(f);
 
-
+    // remove tudo e insere 1 - 5 novamente
+    printf("\n>>>remove tudo e insere 1 - 5 novamente\n");
+    while(!fila_vazia(f))
+    {
+        fila_remove(f, NULL);
+    }
+    for (int i = 0; i < 5; i++)
+    {
+        dado = i + 1;
+        fila_insere(f, &dado);
+    }
+    fila_imprime(f);
+    
 
     fila_destroi(f);
     return 0;

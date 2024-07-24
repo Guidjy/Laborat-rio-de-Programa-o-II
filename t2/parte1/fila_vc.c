@@ -4,7 +4,7 @@
 #include "fila.h"
 
 // número máximo de elementos na fila
-#define MAX_ELEM 10
+#define MAX_ELEM 1000
 
 
 // estrutura da fila
@@ -172,6 +172,33 @@ void fila_remove(Fila self, void *pdado)
     self->pri = (self->pri + 1) % self->cap;
     // decrementa o número de elementos na fila
     self->n_elem--;
+}
+
+
+void fila_inicia_percurso(Fila self, int pos_inicial)
+{
+  // o percurso iniciará na posição fornecida
+  self->pos_percurso = pos_inicial;
+}
+
+bool fila_proximo(Fila self, void *pdado)
+{
+  // calcula o endereço onde está o próximo dado do percurso
+  void *ptr = calcula_ponteiro(self, self->pos_percurso);
+  // caso não existir dado nessa posição, o percurso terminou
+  if (ptr == NULL) return false;
+  // copia o dado para o ponteiro do usuário
+  if (pdado != NULL) {
+    memmove(pdado, ptr, self->tam_dado);
+  }
+  // calcula a posição do próximo dado do percurso
+  if (self->pos_percurso < 0) {
+    self->pos_percurso--;
+  } else {
+    self->pos_percurso++;
+  }
+  // o dado foi encontrado, o percurso ainda não terminou
+  return true;
 }
 
 

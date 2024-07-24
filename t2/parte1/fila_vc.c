@@ -3,17 +3,20 @@
 #include <string.h>
 #include "fila.h"
 
+// número máximo de elementos na fila
+#define MAX_ELEM 10
+
 
 // estrutura da fila
 struct _fila
 {
-    int cap;           // capacidade máxima da fila
-    int n_elem;        // número de elementos na fila
-    int tam_dado;      // tamanho em bytes do dado armazenado na fila
+    int n_elem;        // número de elementos no vetor
+    int cap;           // capacidade máxima do vetor
+    int tam_dado;      // tamanho em bytes do dado armazenado no vetor
     int pos_percurso;  // variável do jogo da cobra
     int pri;           // índice do primeiro elemento da fila
-    int fim;           // índice do final da fila
-    void *espaco;      // vetor circular com os elementos da fila
+    int fim;           // índice do final da fila (não do último elemento)
+    void *espaco;      // vetor de dados
 };
 // typedef struct _fila *Fila; >>> fila.h
 
@@ -32,20 +35,20 @@ Fila fila_cria(int tam_do_dado)
         return NULL;
     }
     // inicializa os descritores da fila
-    nova_fila->cap = 10;  // inicializa a fila com uma capacidade máxima de 10 elementos
-    nova_fila->n_elem = 0;  // fila está vazia
+    nova_fila->n_elem = 0;
+    nova_fila->cap = MAX_ELEM;
     nova_fila->tam_dado = tam_do_dado;
     nova_fila->pri = 0;
     nova_fila->fim = 0;
     // aloca memória para o vetor da fila
-    nova_fila->espaco = malloc(nova_fila->cap * nova_fila->tam_dado);
+    nova_fila->espaco = malloc(nova_fila->cap * sizeof(nova_fila->tam_dado));
     if (nova_fila->espaco == NULL)
     {
         printf("ERRO NA ALOCAÇÃO DE MEMÓRIA PARA O VETOR DA FILA\n");
         free(nova_fila);
         return NULL;
     }
-    
+
     return nova_fila;
 }
 
@@ -68,17 +71,17 @@ bool fila_vazia(Fila self)
 }
 
 
-bool fila_cheia(Fila self)
+// diz se a fila está cheia 
+static bool fila_cheia(Fila self)
 {
     return self->n_elem == self->cap;
 }
 
 
-// calcula o valor do ponteiro para o elemento na posição pos da fila
-//   retorna NULL se não existir elemento nessa posição da fila
+// retorna um ponteiro para o elemento na posição "pos" da fila (retorna NULL caso não exista)
 static void *calcula_ponteiro(Fila self, int pos)
 {
-  // TODO: suporte a pos negativa
+  // suporte a pos negativa
   if (pos < 0)
   {
     pos += self->n_elem;
@@ -102,23 +105,38 @@ static void *calcula_ponteiro(Fila self, int pos)
 }
 
 
+// remove o dado no início da fila e, se pdado não for NULL, copia o dado removido para *pdado
+void fila_remove(Fila self, void *pdado);
+
+
 // insere o dado apontado por pdado no final da fila
 void fila_insere(Fila self, void *pdado)
 {
+    // variável para debugar
+    int *fila_temp = (int*)self->espaco;
+
+    // 1) verifica se a fila está cheia
+    // 2) incrementa o número de elementos na fila para o cálculo do ponteiro não dar problema
+    // 3) calcula um ponteiro para o final da fila
+    // 4) copia a memória de pdado para o ponteiro
+    // 5) altera a posição do final da fila
+
     // verifica se a fila está cheia
     if (fila_cheia(self))
     {
-        printf("FILA CHEIA, NÃO SE PODE INSERIR DADOS\n");
+        printf("FILA CHEIA, NÃO SE PODE INSERIR ELEMENTOS\n");
         return;
     }
-    
+
     // incrementa o número de elementos, para que a próxima posição seja válida e seu endereço possa ser calculado
     self->n_elem++;
-    // calcula a posição onde o dado deve ser colocado
+    // calcula um ponteiro para o final da fila
     void *final_da_fila = calcula_ponteiro(self, self->fim);
-    // insere o dado no vetor
+
+    // copia o dado de pdado para o final da fila
     memmove(final_da_fila, pdado, self->tam_dado);
-    // altera o índice do final da fila, mantendo a implementação circular
+
+    // altera a posição do final da fila, de acordo com a implementação circular
     self->fim = (self->fim + 1) % self->cap;
 }
 
@@ -126,24 +144,33 @@ void fila_insere(Fila self, void *pdado)
 // remove o dado no início da fila e, se pdado não for NULL, copia o dado removido para *pdado
 void fila_remove(Fila self, void *pdado)
 {
+    // variável para debugar
+    int *fila_temp = (int*)self->espaco;
+
+    // 1) verifica se a fila está vazia
+    // 2) calcula um ponteiro para o início da fila
+    // 3) se pdado não estiver NULL, copia o dado do início para pdado
+    // 4) altera o índice do primeiro elemento
+    // 5) decrementa o número de elementos da fila
+
     // verifica se a fila está vazia
     if (fila_vazia(self))
     {
-        printf("FILA VAZIA, NÃO SE PODE REMOVER DADOS\n");
+        printf("FILA VAZIA, NÃO SE PODE REMOVER ITENS\n");
         return;
     }
 
-    // obtem ponteiro para o primeiro elemento da fila
+    // calcula um ponteiro para o índice do primeiro elemento da fila
     void *inicio_da_fila = calcula_ponteiro(self, self->pri);
-    // copia o dado do primeiro elemento para pdado
+    // se pdado não estiver NULL, copia o dado do início da fila para ele
     if (pdado != NULL)
     {
         memmove(pdado, inicio_da_fila, self->tam_dado);
     }
 
-    // altera o índice do primeiro elemento, mantendo a implementação circular
+    // altera o índice do primeiro elemento
     self->pri = (self->pri + 1) % self->cap;
-    // decrementa o número de elementos da fila
+    // decrementa o número de elementos na fila
     self->n_elem--;
 }
 
@@ -155,17 +182,16 @@ void fila_imprime(Fila self)
     printf("pri: %d\n", self->pri);
     printf("fim: %d\n", self->fim);
     printf("vetor: [");
-    int *temp = (int*) self->espaco;
+    int *vet = (int*)self->espaco;
     for (int i = 0; i < self->cap; i++)
     {
-        printf("%d, ", temp[i]);
+        printf("%d, ", vet[i]);
     }
     printf("]\n");
     printf("fila:  [");
     for (int i = 0; i < self->n_elem; i++)
     {
-        int pv = (self->pri + i) % self->cap;
-        printf("%d, ", temp[pv]);
+        printf("%d, ", vet[(self->pri + i) % self->cap]);
     }
     printf("]\n");
 }

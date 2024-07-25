@@ -46,23 +46,16 @@ int main()
     }
     fila_imprime(f);
 
-    // tenta inserir um a mais
-    printf("\n>>>tenta inserir um a mais\n");
+    // tenta inserir um a mais para realocar o vetor
+    printf("\n>>>tenta inserir um a mais para realocar o vetor\n");
     dado = 16;
     fila_insere(f, &dado);
     fila_imprime(f);
 
-    // remove tudo e insere 1 - 5 novamente
-    printf("\n>>>remove tudo e insere 1 - 5 novamente\n");
-    while(!fila_vazia(f))
-    {
-        fila_remove(f, NULL);
-    }
-    for (int i = 0; i < 5; i++)
-    {
-        dado = i + 1;
-        fila_insere(f, &dado);
-    }
+    // remove 2 para realocar o vetor
+    printf("\n>>>remove 2 para realocar o vetor\n");
+    fila_remove(f, NULL);
+    fila_remove(f, NULL);
     fila_imprime(f);
 
     // faz um percurso de início a fim da fila

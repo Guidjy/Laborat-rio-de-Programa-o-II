@@ -4,7 +4,7 @@
 #include "fila.h"
 
 // número máximo de elementos na fila
-#define MAX_ELEM 1000
+#define MAX_ELEM 10
 
 
 // estrutura da fila
@@ -183,22 +183,50 @@ void fila_inicia_percurso(Fila self, int pos_inicial)
 
 bool fila_proximo(Fila self, void *pdado)
 {
-  // calcula o endereço onde está o próximo dado do percurso
-  void *ptr = calcula_ponteiro(self, self->pos_percurso);
-  // caso não existir dado nessa posição, o percurso terminou
-  if (ptr == NULL) return false;
-  // copia o dado para o ponteiro do usuário
-  if (pdado != NULL) {
-    memmove(pdado, ptr, self->tam_dado);
-  }
-  // calcula a posição do próximo dado do percurso
-  if (self->pos_percurso < 0) {
-    self->pos_percurso--;
-  } else {
-    self->pos_percurso++;
-  }
-  // o dado foi encontrado, o percurso ainda não terminou
-  return true;
+    // inicia um percurso aos elementos da fila, a partir de uma posição
+    // cada dado da fila, a partir dessa posição será acessado por chamadas a fila_proximo()
+    // se a posição for positiva, o percurso vai desde essa posição, até o fim da fila
+    // se a posição for negativa, o percurso vai desde essa posição, até o início
+    //   0 é a posição do primeiro dado (aquele que está na fila há mais tempo)
+    //   1 é a posição do segundo dado, etc
+    //   além disso,
+    //   -1 é a posição do último dado (o que está na fila há menos tempo)
+    //   -2 é a posição do penúltimo dado, etc
+
+    // posição do dado na lista
+    int pos_na_lista;
+    // se a posição for negativa, converte ela
+    if (self->pos_percurso < 0)
+    {
+        pos_na_lista = self->pos_percurso + self->n_elem;
+    }
+    else
+    {
+        pos_na_lista = self->pos_percurso;
+    }
+    // calcula o endereço de onde está o próximo dado do percurso
+    int pos_no_vetor = (self->pri + pos_na_lista) % self->cap;
+    void *proximo_dado = calcula_ponteiro(self, pos_no_vetor);
+    // caso não exista dado nessa posição, o percurso terminou
+    if (proximo_dado == NULL) return false;
+    // copia o dado na posição para pdado
+    if (pdado != NULL) memmove(pdado, proximo_dado, self->tam_dado);
+    // calcula a posição do próximo dado do percurso
+    if (self->pos_percurso < 0)
+    {
+        self->pos_percurso--;
+    }
+    else
+    {
+        self->pos_percurso++;
+    }
+    // se percorreu todos os elementos, o percurso acabou
+    if (self->pos_percurso > self->n_elem || self->pos_percurso < -self->n_elem - 1)
+    {
+        return false;
+    }
+    // o dado foi encontrado, o percurso ainda não terminou
+    return true;
 }
 
 

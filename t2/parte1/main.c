@@ -64,6 +64,23 @@ int main()
         fila_insere(f, &dado);
     }
     fila_imprime(f);
+
+    // faz um percurso de início a fim da fila
+    printf("\n>>>faz um percurso de início a fim da fila\n");
+    fila_inicia_percurso(f, 0);
+    while(fila_proximo(f, &dado))
+    {
+        printf("%d > ", dado);
+    }
+
+    // faz um percurso de fim a início da fila
+    printf("\n\n>>>faz um percurso de fim a início da fila\n");
+    fila_inicia_percurso(f, -1);
+    while(fila_proximo(f, &dado))
+    {
+        printf("%d > ", dado);
+    }
+    printf("\n");
     
 
     fila_destroi(f);

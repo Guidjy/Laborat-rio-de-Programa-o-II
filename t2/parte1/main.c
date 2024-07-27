@@ -1,8 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "fila.h"
 
 int main()
 {
+    srand(time(0));
+
     // cria uma fila vazia de inteiros
     printf(">>>cria uma fila vazia de inteiros\n");
     Fila f = fila_cria(sizeof(int));
@@ -58,6 +62,29 @@ int main()
     fila_remove(f, NULL);
     fila_imprime(f);
 
+    // faz um monte de inserção ou remoção
+    printf("\n>>>faz um monte de inserção ou remoção\n");
+    int remocoes = 0;
+    int insercoes = 0;
+    for (int i = 0; i < 100; i++)
+    {
+        int operacao = rand() % 2;
+        if (operacao == 0)
+        {
+            dado = rand() % 30;
+            fila_insere(f, &dado);
+            insercoes++;
+        }
+        else
+        {
+            fila_remove(f, NULL);
+            remocoes++;
+        }
+    }
+    fila_imprime(f);
+    printf(">Inserções: %d\n", insercoes);
+    printf(">Remoções:  %d\n", remocoes);
+
     // faz um percurso de início a fim da fila
     printf("\n>>>faz um percurso de início a fim da fila\n");
     fila_inicia_percurso(f, 0);
@@ -74,7 +101,6 @@ int main()
         printf("%d > ", dado);
     }
     printf("\n");
-    
 
     fila_destroi(f);
     return 0;

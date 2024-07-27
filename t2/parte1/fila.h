@@ -13,9 +13,6 @@ void fila_destroi(Fila self);
 // diz se a fila está vazia
 bool fila_vazia(Fila self);
 
-// diz se a fila está cheia
-bool fila_cheia(Fila self);
-
 // remove o dado no início da fila e, se pdado não for NULL, copia o dado removido para *pdado
 void fila_remove(Fila self, void *pdado);
 
@@ -44,5 +41,6 @@ bool fila_proximo(Fila self, void *pdado);
 
 // função para testagem
 void fila_imprime(Fila self);
+void *retorna_fila(Fila self);
 
 #endif //_FILA_H_

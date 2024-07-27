@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "fila.h"
 
 // número máximo de elementos na fila
@@ -29,11 +30,7 @@ Fila fila_cria(int tam_do_dado)
 {
     // aloca memória para a estrutura da fila
     Fila nova_fila = (Fila) malloc(sizeof(struct _fila));
-    if (nova_fila == NULL)
-    {
-        printf("ERRO NA ALOCAÇÃO DE MEMÓRIA PARA A ESTRUTURA DA FILA\n");
-        return NULL;
-    }
+    assert(nova_fila != NULL);
     // inicializa os descritores da fila
     nova_fila->n_elem = 0;
     nova_fila->cap = MAX_ELEM;
@@ -42,12 +39,7 @@ Fila fila_cria(int tam_do_dado)
     nova_fila->fim = 0;
     // aloca memória para o vetor da fila
     nova_fila->espaco = malloc(nova_fila->cap * sizeof(nova_fila->tam_dado));
-    if (nova_fila->espaco == NULL)
-    {
-        printf("ERRO NA ALOCAÇÃO DE MEMÓRIA PARA O VETOR DA FILA\n");
-        free(nova_fila);
-        return NULL;
-    }
+    assert(nova_fila->espaco != NULL);
 
     return nova_fila;
 }
@@ -105,33 +97,53 @@ static void *calcula_ponteiro(Fila self, int pos)
 }
 
 
-// remove o dado no início da fila e, se pdado não for NULL, copia o dado removido para *pdado
-void fila_remove(Fila self, void *pdado);
+// aloca mais memória para o vetor da fila
+static void realoca_vetor_mais(Fila self)
+{
+    // a função vai duplicar a quantidade de índices do vetor. Para que a implementação circular seja mantida,
+    // deve-se movimentar os dados do vetor. O Primeiro elemento e todos os subsequentes até o final do vetor original
+    // vão ser passados para o final do novo vetor.
+
+    // vetor com a nova capacidade
+    void *novo_espaco = malloc(self->cap * 2 * self->tam_dado);
+    assert(novo_espaco != NULL);
+
+    // move a lista inteira para o início do vetor
+    for (int i = 0; i < self->n_elem; i++)
+    {
+        int pv = (self->pri + i) % self->cap;
+        void *origem = calcula_ponteiro(self, pv);
+        void *destino = (char*)novo_espaco + i * self->tam_dado;
+        assert(origem != NULL && destino != NULL);
+        memmove(destino, origem, self->tam_dado);
+    }
+    // atualiza a capacidade
+    self->cap *= 2;
+    // altera os índices de pri e fim
+    self->pri = 0;
+    self->fim = (self->pri + self->n_elem) % self->cap;
+
+    // atualiza o ponteiro do vetor
+    free(self->espaco);
+    self->espaco = novo_espaco;
+}
 
 
 // insere o dado apontado por pdado no final da fila
 void fila_insere(Fila self, void *pdado)
 {
-    // variável para debugar
-    int *fila_temp = (int*)self->espaco;
-
-    // 1) verifica se a fila está cheia
-    // 2) incrementa o número de elementos na fila para o cálculo do ponteiro não dar problema
-    // 3) calcula um ponteiro para o final da fila
-    // 4) copia a memória de pdado para o ponteiro
-    // 5) altera a posição do final da fila
-
     // verifica se a fila está cheia
     if (fila_cheia(self))
     {
-        printf("FILA CHEIA, NÃO SE PODE INSERIR ELEMENTOS\n");
-        return;
+        // se estiver, sobra sua capacidade e aloca mais memória para ela
+        realoca_vetor_mais(self);
     }
 
     // incrementa o número de elementos, para que a próxima posição seja válida e seu endereço possa ser calculado
     self->n_elem++;
     // calcula um ponteiro para o final da fila
     void *final_da_fila = calcula_ponteiro(self, self->fim);
+    assert(final_da_fila != NULL);
 
     // copia o dado de pdado para o final da fila
     memmove(final_da_fila, pdado, self->tam_dado);
@@ -141,23 +153,47 @@ void fila_insere(Fila self, void *pdado)
 }
 
 
+// desaloca memória para o vetor da fila
+static void realoca_vetor_menos(Fila self)
+{
+    // vetor com a nova capacidade 
+    void *novo_espaco = malloc((self->cap / 2) * self->tam_dado);
+    assert(novo_espaco != NULL);
+
+    // movimenta a lista em ordem para o início do vetor
+    for (int i = 0; i < self->n_elem; i++)
+    {
+        int pv = (self->pri + i) % self->cap;
+        void *origem = calcula_ponteiro(self, pv);
+        void *destino = (char*)novo_espaco + i * self->tam_dado;
+        memmove(destino, origem, self->tam_dado);
+    }
+    // reduz a capacidade pela metade
+    self->cap /= 2;
+    // altera os índices de pri e fim
+    self->pri = 0;
+    self->fim = (self->pri + self->n_elem) % self->cap;
+
+    // atualiza o ponteiro do vetor
+    free(self->espaco);
+    self->espaco = novo_espaco;
+}
+
+
+
 // remove o dado no início da fila e, se pdado não for NULL, copia o dado removido para *pdado
 void fila_remove(Fila self, void *pdado)
 {
-    // variável para debugar
-    int *fila_temp = (int*)self->espaco;
-
-    // 1) verifica se a fila está vazia
-    // 2) calcula um ponteiro para o início da fila
-    // 3) se pdado não estiver NULL, copia o dado do início para pdado
-    // 4) altera o índice do primeiro elemento
-    // 5) decrementa o número de elementos da fila
-
     // verifica se a fila está vazia
     if (fila_vazia(self))
     {
         printf("FILA VAZIA, NÃO SE PODE REMOVER ITENS\n");
         return;
+    }
+    // verifica se tem muita memória sobrando
+    if (self->n_elem - 1 < self->cap / 2 && self->cap / 2 >= 10)
+    {
+        realoca_vetor_menos(self);
     }
 
     // calcula um ponteiro para o índice do primeiro elemento da fila
@@ -249,4 +285,10 @@ void fila_imprime(Fila self)
         printf("%d, ", vet[(self->pri + i) % self->cap]);
     }
     printf("]\n");
+}
+
+
+void *retorna_fila(Fila self)
+{
+    return self->espaco;
 }
